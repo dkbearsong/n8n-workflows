@@ -1,0 +1,244 @@
+{
+  "name": "RSS Feed loader",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 0 * * *"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "ab1fec26-259b-4804-a297-b0af53d810bd",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://rss-bridge.org/bridge01/?action=display&bridge=FeedMergeBridge&feed_name=Artificial+Intelligence&feed_1=https%3A%2F%2Fopenai.com%2Fnews%2Frss.xml&feed_2=https%3A%2F%2Fwww.artificialintelligence-news.com%2Ffeed%2F&feed_3=https%3A%2F%2Fflipboard.com%2Ftopic%2Fartificialintelligence.rss&feed_4=https%3A%2F%2Ftechcrunch.com%2Ftag%2Fartificial-intelligence%2Ffeed%2F&feed_5=https%3A%2F%2Fmedium.com%2Ffeed%2Ftag%2Fartificial-intelligence&feed_6=https%3A%2F%2Fdeepmind.google%2Fblog%2Frss.xml&feed_7=&feed_8=&feed_9=&feed_10=&limit=&format=Atom",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        140,
+        0
+      ],
+      "id": "c3e7243f-dd50-4643-989b-eea246661683",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1036,
+        16
+      ],
+      "id": "5fb9c4fe-406e-4b54-8d09-e5e8d25ee89e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "50fd12ad-b11b-431c-b8d3-0d88d162e204",
+              "name": "docFile",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "ce4ce6d3-0576-494b-8db8-71fa14a88697",
+              "name": "input",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        360,
+        0
+      ],
+      "id": "c2b5d153-40e9-405d-9507-5ad7ea01fb9b",
+      "name": "Set file and RSS feeds"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://www.googleapis.com/upload/drive/v3/files/{{ $json.fileId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        828,
+        192
+      ],
+      "id": "c2ad72a3-4490-45dc-abfa-eb0bfd96cc38",
+      "name": "Clear Doc File",
+      "executeOnce": true,
+      "credentials": {
+        "googleApi": {
+          "id": "VAaWDmrva5TFbsE0",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// The RSS Read node outputs an array of items,\n// even if there's only one item. So it is necessary to iterate over the input.\nconst temp = {json: $input.first().json.docFile}\nconst fileId = temp.json;\nconst extractedUrls = [];\n\n// Calculate \"yesterday\"\nconst yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1); // Set the date to yesterday\nyesterday.setHours(0, 0, 0, 0); // Reset time components to 00:00:00 for accurate date comparison\n\n// Iterate over each item received from the RSS Read node\n// $input contains an array of objects. Each object has a 'json' property\n// which holds the actual data for that item.\nfor (const inputItem of $input.all()) {\n    const item = inputItem.json; // Access the actual item data within the 'json' property\n\n    // The RSS Read node provides these fields directly\n    const pubDateString = item.input.pubDate; // Publication date of the RSS item\n    const link = item.input.link;             // URL link of the RSS item\n\n    if (pubDateString && link) {\n        const itemPubDate = new Date(pubDateString);\n\n        // Compare the publication date to yesterday\n        if (itemPubDate >= yesterday) {\n            extractedUrls.push(link);\n        }\n    }\n}\nconsole.log(extractedUrls.length)\n// Return the extracted URLs as a new item in the workflow\nreturn [{ json: { urls: extractedUrls,  fileId } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        0
+      ],
+      "id": "0a5f92b0-9dcf-44fc-bc32-d5d08b2e87e8",
+      "name": "Extract URLs"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentURL": "={{ $('Extract URLs').item.json.fileId }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $json.urls.join('\\n') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1244,
+        16
+      ],
+      "id": "a469f9c5-ac9b-41ff-8fd2-f4569a551602",
+      "name": "Add URLs to Doc",
+      "credentials": {
+        "googleApi": {
+          "id": "VAaWDmrva5TFbsE0",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Set file and RSS feeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Add URLs to Doc",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set file and RSS feeds": {
+      "main": [
+        [
+          {
+            "node": "Extract URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clear Doc File": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Extract URLs": {
+      "main": [
+        [
+          {
+            "node": "Clear Doc File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fcb44b76-15bc-4b22-96ab-11adb96d11b1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fdaaa8bf71e776295c225d845fce2e359a7cd45b0543c288355195ab06456418"
+  },
+  "id": "aKgShRlsYlyl6cxL",
+  "tags": []
+}
