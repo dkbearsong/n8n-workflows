@@ -1,0 +1,588 @@
+{
+  "name": "Trello Grocery list Organizer",
+  "nodes": [
+    {
+      "parameters": {
+        "id": "5a3f3fd1b6c2b87a1489d7c2"
+      },
+      "type": "n8n-nodes-base.trelloTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        0
+      ],
+      "id": "129e8928-abdd-4912-800f-d5f3a7604c57",
+      "name": "Trello Trigger",
+      "webhookId": "a4297de4-112d-4848-9e8d-148d36d5066f",
+      "credentials": {
+        "trelloApi": {
+          "id": "Vn6fa2NESy47o6S4",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b5b91a73-fb36-45a8-bb7e-e216d976f2ec",
+              "leftValue": "={{$json.action.type}}",
+              "rightValue": "addLabelToCard",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b04ed30d-f16e-48bc-9f56-27ea4727b613",
+              "leftValue": "={{$json.action.data.text}}",
+              "rightValue": "Generate List",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "35bf56f9-98fc-4c73-8a7b-c3511e6a3b75",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        40,
+        0
+      ],
+      "id": "452c23dc-236f-400b-8e5d-627518516b09",
+      "name": "If",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "id": {
+          "__rl": true,
+          "value": "={{ $json.action.data.card.id }}",
+          "mode": ""
+        },
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        360,
+        -20
+      ],
+      "id": "f97fa092-8c9e-4038-a6df-36a2ccc35a25",
+      "name": "Get a card",
+      "credentials": {
+        "trelloApi": {
+          "id": "Vn6fa2NESy47o6S4",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "checklist",
+        "operation": "get",
+        "id": "={{ $json.idChecklists[0] }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        580,
+        -20
+      ],
+      "id": "f15694dc-698c-4195-9216-86db3cc3efc5",
+      "name": "Get a checklist",
+      "credentials": {
+        "trelloApi": {
+          "id": "Vn6fa2NESy47o6S4",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "checklist",
+        "operation": "create",
+        "cardId": {
+          "__rl": true,
+          "value": "={{$node[\"Get a card\"].json[\"id\"]}}\n",
+          "mode": "id"
+        },
+        "name": "Sorted Shopping List",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        1540,
+        -100
+      ],
+      "id": "d0eaf2f8-2f1b-46fc-938d-c670c5de17e1",
+      "name": "Create a checklist",
+      "executeOnce": false,
+      "credentials": {
+        "trelloApi": {
+          "id": "Vn6fa2NESy47o6S4",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "checklist",
+        "operation": "createCheckItem",
+        "checklistId": "={{ $json[\"checklistId\"].trim() }}",
+        "name": "={{ $json[\"item\"].trim() }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        2160,
+        -20
+      ],
+      "id": "4d6298aa-819b-4535-8432-f3a159dbc46b",
+      "name": "Create checklist item",
+      "credentials": {
+        "trelloApi": {
+          "id": "Vn6fa2NESy47o6S4",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1720,
+        -20
+      ],
+      "id": "1eec584b-6459-449a-913e-92180727ef32",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "resource": "checklist",
+        "operation": "delete",
+        "cardId": {
+          "__rl": true,
+          "value": "={{$node[\"Get a card\"].json[\"id\"]}}",
+          "mode": "id"
+        },
+        "id": "={{$node[\"Get a card\"].json[\"idChecklists\"][0]}}"
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        2380,
+        -20
+      ],
+      "id": "382d7df1-3feb-4c06-a461-c46d7d0f2c8c",
+      "name": "Delete a checklist",
+      "executeOnce": true,
+      "credentials": {
+        "trelloApi": {
+          "id": "Vn6fa2NESy47o6S4",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "operation": "removeLabel",
+        "cardId": {
+          "__rl": true,
+          "value": "={{ $json.cardId }}",
+          "mode": "id"
+        },
+        "id": "={{ $json.labelId }}"
+      },
+      "type": "n8n-nodes-base.trello",
+      "typeVersion": 1,
+      "position": [
+        2980,
+        -20
+      ],
+      "id": "b09a09a3-a038-418d-9063-d84051f82df5",
+      "name": "Remove a label from a card",
+      "credentials": {
+        "trelloApi": {
+          "id": "Vn6fa2NESy47o6S4",
+          "name": "Trello account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2600,
+        -20
+      ],
+      "id": "d2a9f298-07f7-4f95-ac38-eae0ee35b2b0",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nconst returnList = [];\n\nfor (const item of $input.first().json.checkItems) {\n  const itemName = item.name;\n  returnList.push(itemName);\n}\n\nreturn [{ json: { itemList: returnList } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        -20
+      ],
+      "id": "b5ccd606-8ef1-49ea-b57e-15c2460d32a7",
+      "name": "extract checklist items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://ollama:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama3\",\n  \"prompt\": \"Take the following shopping list and do the following\\n* Combine repeat mentions of the same ingredients into one entry\\n** If measurements are provided for that item, combine the measurements into imperial measurements\\n** If measurements are not provided, count each mention as 1, then add up all mentions and include that before the ingredient name\\n** if some mentions have measurements and some do not, combine the measurements into imperial measurements, then at the end of the item name put a plus sign and the number of additional mentions\\n* differentiate between ground and fresh. If one item mentions fresh and one item mentions ground, count them as two different items. If an item normally is could be used for either and neither are mentioned, presume fresh\\n* Organize item types in the following order\\n** Breads\\n** Fruits\\n** Vegetables\\n** Nuts\\n** cheeses\\n** meats\\n** dairy\\n** eggs\\n** frozen items\\n ** juices and seltzers\\n** snacks (chips, snack bars, cereal, cookies, crackers)\\n** cleaning, shower, medical, toiletries\\n** pasta, noodles, baking goods, canned goods, spices, oils, other\\n\\nExample input\\n\\n1 lbs ground beef\\n1 tbsp ginger\\npotato chips\\n2 tbsp ginger\\nhalf and half\\nbananas\\n1 tsp ground ginger\\nchopped spinach\\n2 cups spinach\\n\\n\\nExample output\\nbananas\\n2 cups spinach + 1\\n3 tbsp ginger\\n1 lbs ground beef\\nhalf and half\\npotato chips\\n1 tsp ground ginger\\n\\n-----------------\\n{{ $json.itemList.join(',') }}\\n\\nReturn the result as a plain text checklist\",\n \"stream\":false\n}\n",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1060,
+        -20
+      ],
+      "id": "8d41bf6c-a2ac-4a6c-a68c-d4fd3ba72057",
+      "name": "Ollama list reorganizer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6b03fe34-9c1c-4590-b8c5-cc4e63798157",
+              "name": "response",
+              "value": "=\"Here is the organized and combined shopping list:\\n\\n**Breads**\\n* Italian sub roll or hoagie\\n* Burrito-style tortillas (6)\\n* Ciabatta loaf\\n* Cinnamon rolls\\n\\n**Fruits**\\n* Bananas\\n* Strawberries\\n* Fruit cups (peaches)\\n\\n**Vegetables**\\n* Tomatoes (4)\\n* Cucumbers (2)\\n* Red onions\\n* Gem lettuce\\n* Celery\\n* Green onions (3)\\n* Basil leaves (1/2 cup)\\n* Cilantro (1 1/3 cups + 1)\\n* Arugula\\n* Parsley\\n* Coleslaw\\n* Banana peppers (optional)\\n\\n**Nuts**\\n* None\\n\\n**Cheeses**\\n* Feta cheese (1 cup)\\n* Mozzarella cheese (shredded, 3 cups)\\n* Fresh mozzarella cheese, sliced (1 cup)\\n* Breakfast cheese\\n* Parmesan\\n\\n**Meats**\\n* Ground beef (1 lbs)\\n* Genoa salami (4 oz each)\\n* Pepperoni (4 oz each)\\n* Prosciutto (4 oz each)\\n* Rotisserie chicken (if available)\\n\\n**Dairy**\\n* Lactose-free milk\\n* Half and half (2 items)\\n* Yogurt (1/2 cup)\\n\\n**Frozen Items**\\n* Frozen paratha (2)\\n* Frozen naan (2)\\n\\n**Snacks (chips, snack bars, cereal, cookies, crackers)**\\n* Chips (1 + 1)\\n* Snack bars\\n\\n**Cleaning, Shower, Medical, Toiletries**\\n* Body wash (Dereck)\\n\\n**Pasta, Noodles, Baking Goods, Canned Goods, Spices, Oils, Other**\\n* Gnocchi (1 pound)\\n* Brown sugar\\n* White beans (canned, 20 oz, 2 ½ cups)\\n* Diced tomatoes (canned, 15 oz)\\n* Sweet chili sauce\\n* Soy Sauce (large refill)\\n* Ginger (2 oz)\\n* Curry leaves\\n* Pesto\\n* Full fat coconut milk\"",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1260,
+        -20
+      ],
+      "id": "5102b68d-0ad0-40bf-830e-88d2b65310f3",
+      "name": "response extractor"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawText = $json.response || \"\"; // Adjust if needed\n\nconst lines = rawText.split('\\n');\n\nlet section = '';\nconst output = [];\n\nfor (let line of lines) {\n  line = line.trim();\n\n  // Detect section headers like **Breads**\n  const sectionMatch = line.match(/^\\*\\*(.+?)\\*\\*$/);\n  if (sectionMatch) {\n    section = sectionMatch[1];\n    // Add bolded section name as an item\n    output.push({\n      json: {\n        item: `**${section}**`\n      }\n    });\n    continue;\n  }\n\n  // Detect list items like * Milk\n  const itemMatch = line.match(/^\\*\\s(.+)/);\n  if (itemMatch) {\n    output.push({\n      json: {\n        item: itemMatch[1]\n      }\n    });\n  }\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1540,
+        100
+      ],
+      "id": "42b9349e-e14f-4a85-b1fb-fd8762afd5d9",
+      "name": "List Creator"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7cd9484e-5294-4da7-80be-135ceb758c11",
+              "name": "cardId",
+              "value": "={{ $json.action.data.card.id }}",
+              "type": "string"
+            },
+            {
+              "id": "d55f5fb7-539d-4345-b13d-746ba7aa1626",
+              "name": "labelId",
+              "value": "={{ $json.action.data.label.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        -240
+      ],
+      "id": "b767c102-5ff2-4578-9b19-773386b4aa33",
+      "name": "Send OldCardId"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "79bc0197-3eef-4872-a2ed-eb461ab478d7",
+              "name": "checklistId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "6d238ac9-1aa6-4973-9cfe-8ff95600a3e8",
+              "name": "item",
+              "value": "={{ $json.item }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1940,
+        -20
+      ],
+      "id": "ae48611c-c830-458e-b444-43bac82decac",
+      "name": "Send checklist w/ checklistId"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Trello Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send OldCardId",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get a card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a card": {
+      "main": [
+        [
+          {
+            "node": "Get a checklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a checklist": {
+      "main": [
+        [
+          {
+            "node": "extract checklist items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a checklist": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send checklist w/ checklistId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create checklist item": {
+      "main": [
+        [
+          {
+            "node": "Delete a checklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a checklist": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Remove a label from a card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract checklist items": {
+      "main": [
+        [
+          {
+            "node": "Ollama list reorganizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama list reorganizer": {
+      "main": [
+        [
+          {
+            "node": "response extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "response extractor": {
+      "main": [
+        [
+          {
+            "node": "List Creator",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create a checklist",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Creator": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Send OldCardId": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send checklist w/ checklistId": {
+      "main": [
+        [
+          {
+            "node": "Create checklist item",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "258de5c4-def8-47ae-99a5-bb796a03dd53",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fdaaa8bf71e776295c225d845fce2e359a7cd45b0543c288355195ab06456418"
+  },
+  "id": "BfjvTnMWm1PeTuOo",
+  "tags": []
+}
