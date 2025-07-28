@@ -139,7 +139,7 @@
       "typeVersion": 1,
       "position": [
         1540,
-        -100
+        -80
       ],
       "id": "d0eaf2f8-2f1b-46fc-938d-c670c5de17e1",
       "name": "Create a checklist",
@@ -162,7 +162,7 @@
       "type": "n8n-nodes-base.trello",
       "typeVersion": 1,
       "position": [
-        2160,
+        2420,
         -20
       ],
       "id": "4d6298aa-819b-4535-8432-f3a159dbc46b",
@@ -183,7 +183,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        1720,
+        2080,
         -20
       ],
       "id": "1eec584b-6459-449a-913e-92180727ef32",
@@ -203,7 +203,7 @@
       "type": "n8n-nodes-base.trello",
       "typeVersion": 1,
       "position": [
-        2380,
+        2600,
         -20
       ],
       "id": "382d7df1-3feb-4c06-a461-c46d7d0f2c8c",
@@ -230,7 +230,7 @@
       "type": "n8n-nodes-base.trello",
       "typeVersion": 1,
       "position": [
-        2980,
+        3200,
         -20
       ],
       "id": "b09a09a3-a038-418d-9063-d84051f82df5",
@@ -249,7 +249,7 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        2600,
+        2820,
         -20
       ],
       "id": "d2a9f298-07f7-4f95-ac38-eae0ee35b2b0",
@@ -283,7 +283,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"llama3\",\n  \"prompt\": \"Take the following shopping list and do the following\\n* Combine repeat mentions of the same ingredients into one entry\\n** If measurements are provided for that item, combine the measurements into imperial measurements\\n** If measurements are not provided, count each mention as 1, then add up all mentions and include that before the ingredient name\\n** if some mentions have measurements and some do not, combine the measurements into imperial measurements, then at the end of the item name put a plus sign and the number of additional mentions\\n* differentiate between ground and fresh. If one item mentions fresh and one item mentions ground, count them as two different items. If an item normally is could be used for either and neither are mentioned, presume fresh\\n* Organize item types in the following order\\n** Breads\\n** Fruits\\n** Vegetables\\n** Nuts\\n** cheeses\\n** meats\\n** dairy\\n** eggs\\n** frozen items\\n ** juices and seltzers\\n** snacks (chips, snack bars, cereal, cookies, crackers)\\n** cleaning, shower, medical, toiletries\\n** pasta, noodles, baking goods, canned goods, spices, oils, other\\n\\nExample input\\n\\n1 lbs ground beef\\n1 tbsp ginger\\npotato chips\\n2 tbsp ginger\\nhalf and half\\nbananas\\n1 tsp ground ginger\\nchopped spinach\\n2 cups spinach\\n\\n\\nExample output\\nbananas\\n2 cups spinach + 1\\n3 tbsp ginger\\n1 lbs ground beef\\nhalf and half\\npotato chips\\n1 tsp ground ginger\\n\\n-----------------\\n{{ $json.itemList.join(',') }}\\n\\nReturn the result as a plain text checklist\",\n \"stream\":false\n}\n",
+        "jsonBody": "={\n  \"model\": \"gemma3:12b\",\n  \"prompt\": \"Take the following shopping list and return a cleaned and organized version with these exact rules:\\n\\n1. Combine duplicate items\\n- If measurements are provided (e.g. cups, tbsp, lbs), sum them up using imperial units.\\n- If no measurement is provided, treat each mention as 1 unit. Sum and prefix with a count (e.g. \\\"3 tomatoes\\\").\\n- If some mentions have measurements and others don’t, sum the measurements, then append a +N for the unmeasured items (e.g. \\\"2 cups spinach + 1\\\").\\n\\n2.  Differentiate ground vs fresh\\n- Treat “ground” and “fresh” as distinct items.\\n- If unspecified, assume fresh by default.\\n\\n3. Organize items into the following sections, in this exact order:\\n**Breads**\\n**Fruits**\\n**Vegetables**\\n**Nuts**\\n**Cheeses**\\n**Meats**\\n**Dairy**\\n**Eggs**\\n**Frozen Items**\\n**Juices and Seltzers**\\n**Snacks (chips, snack bars, cereal, cookies, crackers)**\\n**Cleaning, Shower, Medical, Toiletries**\\n**Pantry and Canned Goods**\\n\\n4.  Output Format\\n- Output only the checklist, nothing else — no intro, no explanation, no notes.\\n- Format:\\n  **Section**\\n  item 1\\n  item 2\\n\\n- Start your output with **Breads**\\n- Do not duplicate items across sections.\\n- Do not invent or infer items.\\n- Do not skip any items.\\n\\nExample input:\\n1 lbs ground beef\\n1 tbsp ginger\\npotato chips\\n2 tbsp ginger\\nhalf and half\\nbananas\\n1 tsp ground ginger\\nchopped spinach\\n2 cups spinach\\n\\nExpected output:\\n**Vegetables**\\n2 cups spinach + 1\\n\\n**Fruits**\\nbananas\\n\\n**Meats**\\n1 lbs ground beef\\n\\n**Dairy**\\nhalf and half\\n\\n**Snacks (chips, snack bars, cereal, cookies, crackers)**\\npotato chips\\n\\n**Pantry and Canned Goods**\\n3 tbsp ginger\\n1 tsp ground ginger\\n\\nNow use the following list:\\n{{ $json.itemList.join(',') }}\",\n \"stream\":false,\n  \"temperature\": 0.2,\n  \"top_p\": 0.8,\n  \"repetition_penalty\": 1.15,\n  \"stop\": [\"Let me know\", \"Here is\", \"===\"]\n}\n",
         "options": {
           "response": {
             "response": {
@@ -308,7 +308,7 @@
             {
               "id": "6b03fe34-9c1c-4590-b8c5-cc4e63798157",
               "name": "response",
-              "value": "=\"Here is the organized and combined shopping list:\\n\\n**Breads**\\n* Italian sub roll or hoagie\\n* Burrito-style tortillas (6)\\n* Ciabatta loaf\\n* Cinnamon rolls\\n\\n**Fruits**\\n* Bananas\\n* Strawberries\\n* Fruit cups (peaches)\\n\\n**Vegetables**\\n* Tomatoes (4)\\n* Cucumbers (2)\\n* Red onions\\n* Gem lettuce\\n* Celery\\n* Green onions (3)\\n* Basil leaves (1/2 cup)\\n* Cilantro (1 1/3 cups + 1)\\n* Arugula\\n* Parsley\\n* Coleslaw\\n* Banana peppers (optional)\\n\\n**Nuts**\\n* None\\n\\n**Cheeses**\\n* Feta cheese (1 cup)\\n* Mozzarella cheese (shredded, 3 cups)\\n* Fresh mozzarella cheese, sliced (1 cup)\\n* Breakfast cheese\\n* Parmesan\\n\\n**Meats**\\n* Ground beef (1 lbs)\\n* Genoa salami (4 oz each)\\n* Pepperoni (4 oz each)\\n* Prosciutto (4 oz each)\\n* Rotisserie chicken (if available)\\n\\n**Dairy**\\n* Lactose-free milk\\n* Half and half (2 items)\\n* Yogurt (1/2 cup)\\n\\n**Frozen Items**\\n* Frozen paratha (2)\\n* Frozen naan (2)\\n\\n**Snacks (chips, snack bars, cereal, cookies, crackers)**\\n* Chips (1 + 1)\\n* Snack bars\\n\\n**Cleaning, Shower, Medical, Toiletries**\\n* Body wash (Dereck)\\n\\n**Pasta, Noodles, Baking Goods, Canned Goods, Spices, Oils, Other**\\n* Gnocchi (1 pound)\\n* Brown sugar\\n* White beans (canned, 20 oz, 2 ½ cups)\\n* Diced tomatoes (canned, 15 oz)\\n* Sweet chili sauce\\n* Soy Sauce (large refill)\\n* Ginger (2 oz)\\n* Curry leaves\\n* Pesto\\n* Full fat coconut milk\"",
+              "value": "={{ $json.response }}",
               "type": "string"
             }
           ]
@@ -326,13 +326,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const rawText = $json.response || \"\"; // Adjust if needed\n\nconst lines = rawText.split('\\n');\n\nlet section = '';\nconst output = [];\n\nfor (let line of lines) {\n  line = line.trim();\n\n  // Detect section headers like **Breads**\n  const sectionMatch = line.match(/^\\*\\*(.+?)\\*\\*$/);\n  if (sectionMatch) {\n    section = sectionMatch[1];\n    // Add bolded section name as an item\n    output.push({\n      json: {\n        item: `**${section}**`\n      }\n    });\n    continue;\n  }\n\n  // Detect list items like * Milk\n  const itemMatch = line.match(/^\\*\\s(.+)/);\n  if (itemMatch) {\n    output.push({\n      json: {\n        item: itemMatch[1]\n      }\n    });\n  }\n}\n\nreturn output;\n"
+        "jsCode": "const rawText = $json.response || \"\"; // Adjust if needed\n\nconst lines = rawText.split('\\n');\n\nlet section = '';\nconst output = [];\n\nfor (let line of lines) {\n  line = line.trim();\n\n  // Skip empty lines\n  if (!line) continue;\n\n  // Detect section headers like **Breads**\n  const sectionMatch = line.match(/^\\*\\*(.+?)\\*\\*$/);\n  if (sectionMatch) {\n    section = sectionMatch[1];\n    output.push({\n      json: {\n        item: `**${section}**`\n      }\n    });\n    continue;\n  }\n\n  // Skip \"None\"\n  if (line.toLowerCase() === 'none') continue;\n\n  // Add line as item under current section\n  output.push({\n    json: {\n      item: line\n    }\n  });\n}\n\nreturn output;\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
         1540,
-        100
+        80
       ],
       "id": "42b9349e-e14f-4a85-b1fb-fd8762afd5d9",
       "name": "List Creator"
@@ -373,7 +373,7 @@
             {
               "id": "79bc0197-3eef-4872-a2ed-eb461ab478d7",
               "name": "checklistId",
-              "value": "={{ $json.id }}",
+              "value": "={{ $json.checklistId }}",
               "type": "string"
             },
             {
@@ -389,11 +389,34 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1940,
+        2240,
         -20
       ],
       "id": "ae48611c-c830-458e-b444-43bac82decac",
       "name": "Send checklist w/ checklistId"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "29338931-c8b9-4ca2-9e02-c804f3c45323",
+              "name": "checklistId",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1760,
+        -80
+      ],
+      "id": "ead3704a-157b-4b56-95a6-3acaae384874",
+      "name": "Edit Fields"
     }
   ],
   "pinData": {},
@@ -451,7 +474,7 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Edit Fields",
             "type": "main",
             "index": 0
           }
@@ -572,13 +595,24 @@
           }
         ]
       ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "258de5c4-def8-47ae-99a5-bb796a03dd53",
+  "versionId": "469ec7ea-292a-448c-b9fd-1d38053872be",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "fdaaa8bf71e776295c225d845fce2e359a7cd45b0543c288355195ab06456418"
