@@ -29,24 +29,11 @@
       "type": "n8n-nodes-base.rssFeedRead",
       "typeVersion": 1.2,
       "position": [
-        140,
+        144,
         0
       ],
       "id": "c3e7243f-dd50-4643-989b-eea246661683",
       "name": "RSS Read"
-    },
-    {
-      "parameters": {
-        "mode": "chooseBranch"
-      },
-      "type": "n8n-nodes-base.merge",
-      "typeVersion": 3.2,
-      "position": [
-        1036,
-        16
-      ],
-      "id": "5fb9c4fe-406e-4b54-8d09-e5e8d25ee89e",
-      "name": "Merge"
     },
     {
       "parameters": {
@@ -55,7 +42,7 @@
             {
               "id": "50fd12ad-b11b-431c-b8d3-0d88d162e204",
               "name": "docFile",
-              "value": "",
+              "value": "1-p5xLlk2O4NnnKpLoar2aR3iVnBNu3TjuD3-btZlR2A",
               "type": "string"
             },
             {
@@ -71,7 +58,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        360,
+        368,
         0
       ],
       "id": "c2b5d153-40e9-405d-9507-5ad7ea01fb9b",
@@ -100,8 +87,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        828,
-        192
+        864,
+        160
       ],
       "id": "c2ad72a3-4490-45dc-abfa-eb0bfd96cc38",
       "name": "Clear Doc File",
@@ -115,12 +102,12 @@
     },
     {
       "parameters": {
-        "jsCode": "// The RSS Read node outputs an array of items,\n// even if there's only one item. So it is necessary to iterate over the input.\nconst temp = {json: $input.first().json.docFile}\nconst fileId = temp.json;\nconst extractedUrls = [];\n\n// Calculate \"yesterday\"\nconst yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1); // Set the date to yesterday\nyesterday.setHours(0, 0, 0, 0); // Reset time components to 00:00:00 for accurate date comparison\n\n// Iterate over each item received from the RSS Read node\n// $input contains an array of objects. Each object has a 'json' property\n// which holds the actual data for that item.\nfor (const inputItem of $input.all()) {\n    const item = inputItem.json; // Access the actual item data within the 'json' property\n\n    // The RSS Read node provides these fields directly\n    const pubDateString = item.input.pubDate; // Publication date of the RSS item\n    const link = item.input.link;             // URL link of the RSS item\n\n    if (pubDateString && link) {\n        const itemPubDate = new Date(pubDateString);\n\n        // Compare the publication date to yesterday\n        if (itemPubDate >= yesterday) {\n            extractedUrls.push(link);\n        }\n    }\n}\nconsole.log(extractedUrls.length)\n// Return the extracted URLs as a new item in the workflow\nreturn [{ json: { urls: extractedUrls,  fileId } }];"
+        "jsCode": "// The RSS Read node outputs an array of items,\n// even if there's only one item. So it is necessary to iterate over the input.\nconst temp = {json: $input.first().json.docFile}\nconst fileId = temp.json;\nconst extractedUrls = [];\n\n// Calculate \"yesterday\"\nconst yesterday = new Date();\nyesterday.setDate(yesterday.getDate() - 1); // Set the date to yesterday\nyesterday.setHours(0, 0, 0, 0); // Reset time components to 00:00:00 for accurate date comparison\n\n// Iterate over each item received from the RSS Read node\n// $input contains an array of objects. Each object has a 'json' property\n// which holds the actual data for that item.\nfor (const inputItem of $input.all()) {\n    const item = inputItem.json; // Access the actual item data within the 'json' property\n\n    // The RSS Read node provides these fields directly\n    const pubDateString = item.input.pubDate; // Publication date of the RSS item\n    const link = item.input.link;  \n    const title = item.input.title;// URL link of the RSS item\n\n    if (pubDateString && link) {\n        const itemPubDate = new Date(pubDateString);\n\n        // Compare the publication date to yesterday\n        if (itemPubDate >= yesterday) {\n            extractedUrls.push({link: link, title: title});\n        }\n    }\n}\nconst userAgents = [\n  \"Mozilla/5.0 (Windows NT 10.0; Win64; x64)\",\n  \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)\",\n  \"Mozilla/5.0 (X11; Linux x86_64)\",\n  \"Mozilla/5.0 (iPhone; CPU iPhone OS 15_2 like Mac OS X)\"\n];\n\nconst output = extractedUrls.map(url => {\n  const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];\n\n  return {\n    json: {\n      url: url.link,             // renamed from 'urls' to 'url' (singular) — makes more sense\n      fileId: fileId,\n      title: url.title,\n      userAgent: randomUserAgent\n    }\n  };\n});\n\nreturn output;"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        620,
+        592,
         0
       ],
       "id": "0a5f92b0-9dcf-44fc-bc32-d5d08b2e87e8",
@@ -128,14 +115,127 @@
     },
     {
       "parameters": {
+        "url": "={{ $json.url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "={{ $json.userAgent }}"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 3000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        864,
+        0
+      ],
+      "id": "983bb399-e6d8-4b67-b924-6477a179d96b",
+      "name": "HTTP Request",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1280,
+        16
+      ],
+      "id": "d0a32afa-872b-4392-a412-df42a659575d",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "html": "={{ $json.data }}",
+        "destinationKey": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.markdown",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        16
+      ],
+      "id": "a7659529-d010-4f77-a652-21161185688b",
+      "name": "Markdown"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items\n  .filter(item => {\n    return !item.json.error;\n  });"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1072,
+        0
+      ],
+      "id": "2eaa65d4-fc09-4d30-9485-b59a43d2b957",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Take the following input data, identify the title, place it at the top with a \"Title:\" prefix,  and remove all markdown code, URLs, and HTML elements from the data. remove all \\n markers as well. Extract only the plain text. Do not provide any acknowledgement of the task. Only return the raw data.\n\n {{ $json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        1792,
+        16
+      ],
+      "id": "a3c31529-b7cc-4ad9-a69b-b7850edb4d8b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "gemma3:12b",
+        "options": {
+          "temperature": 0.2,
+          "topK": 0.1,
+          "topP": 0.1,
+          "frequencyPenalty": 0,
+          "keepAlive": "5m"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        224
+      ],
+      "id": "1b92cea1-d05d-40fb-af55-ebdea7f6366e",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "YgmhDkePVJ7swnvB",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "authentication": "serviceAccount",
         "operation": "update",
-        "documentURL": "={{ $('Extract URLs').item.json.fileId }}",
+        "documentURL": "1-p5xLlk2O4NnnKpLoar2aR3iVnBNu3TjuD3-btZlR2A",
         "actionsUi": {
           "actionFields": [
             {
               "action": "insert",
-              "text": "={{ $json.urls.join('\\n') }}"
+              "text": "=\nURL: \n\nArticle: {{ $json.output }}\n\n-------------------------"
             }
           ]
         }
@@ -143,11 +243,11 @@
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
       "position": [
-        1244,
+        2320,
         16
       ],
-      "id": "a469f9c5-ac9b-41ff-8fd2-f4569a551602",
-      "name": "Add URLs to Doc",
+      "id": "f31f2deb-199c-4a46-b1fc-29ce6b2f0595",
+      "name": "Update a document",
       "credentials": {
         "googleApi": {
           "id": "VAaWDmrva5TFbsE0",
@@ -174,17 +274,6 @@
         [
           {
             "node": "Set file and RSS feeds",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Add URLs to Doc",
             "type": "main",
             "index": 0
           }
@@ -222,7 +311,73 @@
             "index": 0
           },
           {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Markdown",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Markdown": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
             "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Update a document",
             "type": "main",
             "index": 0
           }
@@ -230,11 +385,11 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "fcb44b76-15bc-4b22-96ab-11adb96d11b1",
+  "versionId": "42225c0f-d7b2-44e0-82a6-ecf407df1382",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "fdaaa8bf71e776295c225d845fce2e359a7cd45b0543c288355195ab06456418"
