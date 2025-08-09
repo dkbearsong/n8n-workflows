@@ -1,0 +1,279 @@
+{
+  "name": "Weekly Newsletter Roundup",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "simple": false,
+        "filters": {
+          "q": "label:newsletter AND newer_than:7d"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "e09fb9a1-f2f9-49af-b1c8-c6a784c27451",
+      "name": "Get many messages",
+      "webhookId": "c86eec42-e8f7-436c-9d9b-39cd6730f2b0",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aOjodnHukSdjy1yd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d023dfc-c522-46ec-9587-257357b31870",
+              "name": "Text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "9ca87c93-2d7e-4e34-aff6-be830ea6101d",
+              "name": "Subject",
+              "value": "={{ $json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "5971c1e0-0ae1-4033-8a78-52ee630114cb",
+              "name": "date",
+              "value": "={{ $json.date }}",
+              "type": "string"
+            },
+            {
+              "id": "7f129ef6-a74f-48e6-956f-f5ece2d88d2b",
+              "name": "from_email",
+              "value": "={{ $json.from.value[0].address }}",
+              "type": "string"
+            },
+            {
+              "id": "fb4d6730-54db-4a4d-8aa9-354fd6548205",
+              "name": "from_name",
+              "value": "={{ $json.from.value[0].name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f859c0c2-9a03-4fc2-8e79-ea34271d9b79",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        624,
+        0
+      ],
+      "id": "f9e901b3-7fb6-4078-94c0-aa85f94447ec",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.data }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "<instructions>\nI\"m giving you JSON export of emails. Your job is to extract real newsletter issues and turn them into a clean weekly digest. \n\n<INPUT>\nInput data will be provided in this format. Use this as reference\n\n[\n  {\n    \"text\":\"View this post on the web at https://blog.bytebytego.com/p/how-uber-eats-deduplicates-hundreds\\n\\nTake Control of User Access with WorkOS (Sponsored) [ https://substack.com/redirect/efcc6f9e-2de7-41cb-ba25-d3bff903b124?j=eyJ1IjoiNjRrNHV2In0.Ql6sEnmi19Ma7Egh6XH-5F4458o-kSmvQEWa883sWW4 ]\\nAs your app grows, managing “who can do what” becomes complex. Hard-coded roles and scattered permissions slow you down and fail to meet enterprise demands for fine-grained access.\\nWorkOS RBAC is the fastest way to implement structured, scalable permissions.......\",\n    \"date\":\"2025-08-05T15:30:44.000Z\",\n    \"subject\":\"This is a test summary\",\n    \"from_email\":\"dkbearsong@gmail.com\",\n    \"from_\"name\":\"Dereck Bearsong\"\n  },{\n    \"text\":\"View this post on the web at https://blog.bytebytego.com/p/how-uber-eats-deduplicates-hundreds\\n\\nTake Control of User Access with WorkOS (Sponsored) [ https://substack.com/redirect/efcc6f9e-2de7-41cb-ba25-d3bff903b124?j=eyJ1IjoiNjRrNHV2In0.Ql6sEnmi19Ma7Egh6XH-5F4458o-kSmvQEWa883sWW4 ]\\nAs your app grows, managing “who can do what” becomes complex. Hard-coded roles and scattered permissions slow you down and fail to meet enterprise demands for fine-grained access.\\nWorkOS RBAC is the fastest way to implement structured, scalable permissions.......\",\n    \"date\":\"2025-08-05T15:30:44.000Z\",\n    \"subject\":\"This is a test summary\",\n    \"from_email\":\"dkbearsong@gmail.com\",\n    \"from_\"name\":\"Dereck Bearsong\"\n  },\n  ...\n]\n\n\n<DO>\nItterate over the provided JSON data and return the following:\n* Provide the date and time received\n* Provide the sending address and the name of the sender\n* Provide the subject of the email\n* Provide 3 bullet points with top takeaways from each newsletter, providing 2 sentences each\n\n<DONT>\n* Do not combine all of the emails into a single summary\n\n<OUTPUT>\n[\n  {\n    \"date_time\": \"08-05-2025 15:30:44\",\n    \"from\":{\n      \"email\":\"dkbearsong@gmail.com\",\n      \"name\":\"Dereck Bearsong\"\n    },\n    \"subject\":\"This is a test summary\",\n    \"takeaways\":[\n      \"<Takeaway 1>\",\n      \"<Takeaway 2>\",\n      \"<Takeaway 3>\"\n    ]\n  },{\n    \"date_time\": \"08-05-2025 15:30:44\",\n    \"from\":{\n      \"email\":\"dkbearsong@gmail.com\",\n      \"name\":\"Dereck Bearsong\"\n    },\n    \"subject\":\"This is a test summary\",\n    \"takeaways\":[\n      \"<Takeaway 1>\",\n      \"<Takeaway 2>\",\n      \"<Takeaway 3>\"\n    ]\n  },\n  ...\n]\n\n---------------"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        832,
+        0
+      ],
+      "id": "c747c6fc-d1b1-4f63-818c-4318c3a46034",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.4,
+          "topK": 5,
+          "topP": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        704,
+        208
+      ],
+      "id": "94ab63ad-3fd2-4af7-8d0e-4ee70f2265cd",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "jqJKjIoDpf4JIQ94",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the raw string from the incoming data\nlet raw = $json.output;\n\n// Remove markdown code fences\nraw = raw.replace(/```json\\s*/i, '').replace(/```/g, '').trim();\n\n// Parse the string into actual JSON\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (err) {\n  throw new Error('Failed to parse JSON: ' + err.message);\n}\n\nlet outJson = parsed.map(item => ({ json: item }));\nvar finalOut = \"\";\n\nfor (const item in outJson){\n  if (outJson[item] === null){\n    continue;\n  }\n    finalOut += \"Subject: \" + outJson[item].json.subject + \"<br>\";\n  finalOut += \"Date & Time: \" + outJson[item].json.date_time + \"<br>\";\n  finalOut += \"From: \" + outJson[item].json.from.name + \"(\" + outJson[item].json.from.email + \")<br>\";\n  finalOut += \"Takeaways:<br> \";\n  for (const takeaway in outJson[item].json.takeaways){\n    finalOut += \"* \" + outJson[item].json.takeaways[takeaway] + \"<br>\";\n  }\n  finalOut += \"<br>\" + \"----------------------------<br><br>\"\n}\n\nreturn {\"output\":finalOut}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1296,
+        0
+      ],
+      "id": "245ebe67-0b18-4333-b0bc-fa48af933bc6",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "dkbearsong@gmail.com",
+        "subject": "=Weekly Newsletter Roundup: Week of {{ $today.toFormat('MM-dd-yyyy') }}",
+        "message": "=Here is this week's newsletter top takeaways. Check for these emails in the 'newsletter' tag:\n<br><br>\n----------------------------\n<br>\n{{ $json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1504,
+        0
+      ],
+      "id": "5d98470e-5d72-4ad2-a7ec-21b620b6025e",
+      "name": "Send a message",
+      "webhookId": "3316be5f-4e03-4dc2-9a31-7ca4041bf435",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aOjodnHukSdjy1yd",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a235da24-535e-47f1-ae6d-99878e066548",
+      "name": "Schedule Trigger"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get many messages": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get many messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2759313e-cbc8-4aa4-a264-f7c5b5248ea7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fdaaa8bf71e776295c225d845fce2e359a7cd45b0543c288355195ab06456418"
+  },
+  "id": "lLkn2rC85JqkwhyB",
+  "tags": []
+}
